@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/nursultanabdyrazakov/Documents/frontend/**)",
+      "Bash(npm install *)",
+      "Bash(npx tailwindcss *)",
+      "Bash(./node_modules/.bin/tailwindcss init *)",
+      "Bash(npm run *)",
+      "Bash(sed -i '' \"s/import { roomsApi, Room, RoomStatus }/import { roomsApi };\\\\nimport type { Room, RoomStatus }/\" src/pages/Rooms.tsx)",
+      "Bash(sed -i '' \"s/import { tenantsApi, Tenant }/import { tenantsApi };\\\\nimport type { Tenant }/\" src/pages/Tenants.tsx)",
+      "Bash(sed -i '' \"s/import { paymentsApi, contractsApi, Payment, PaymentStatus, Contract }/import { paymentsApi, contractsApi };\\\\nimport type { Payment, PaymentStatus, Contract }/\" src/pages/Payments.tsx)",
+      "Bash(sed -i '' \"s/import { utilitiesApi, roomsApi, UtilityReading, UtilityBill, Room }/import { utilitiesApi, roomsApi };\\\\nimport type { UtilityReading, UtilityBill, Room }/\" src/pages/Utilities.tsx)",
+      "Bash(sed -i '' \"s/import { dashboardApi, DashboardStats, Contract }/import { dashboardApi };\\\\nimport type { DashboardStats, Contract }/\" src/pages/Dashboard.tsx)",
+      "Bash(perl -i -pe \"s/formatter=\\\\{\\\\\\(v: number\\\\\\) => \\\\`\\\\\\\\\\\\$\\\\{v\\\\.toLocaleString\\\\\\('ru'\\\\\\)\\\\} ₸\\\\`\\\\}/formatter={\\(v\\) => typeof v === 'number' ? \\\\`\\\\$\\\\{v.toLocaleString\\('ru'\\)\\\\} ₸\\\\` : String\\(v\\)}/\" /Users/nursultanabdyrazakov/Documents/frontend/src/pages/Dashboard.tsx)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(unzip -p - backend/README.md)",
+      "Bash(unzip -p \"/Users/nursultanabdyrazakov/Documents/backend.zip\" backend/README.md)",
+      "Bash(unzip -p \"/Users/nursultanabdyrazakov/Documents/backend.zip\" backend/.env.example)",
+      "Bash(unzip -p \"/Users/nursultanabdyrazakov/Documents/backend.zip\" backend/docker-compose.yml)",
+      "Bash(docker --version)",
+      "Bash(docker info *)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s http://localhost:8000/contracts/?expiring_days=90)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
