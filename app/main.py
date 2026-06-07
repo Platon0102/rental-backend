@@ -1,45 +1,60 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import asyncio
 import os
 
 from app.database import engine, Base
 from app.config import settings
-from app.routers import rooms, tenants, contracts, payments, utilities, dashboard
+from app.routers import rooms, tenants, contracts, payments, utilities, dashboard, notifications
 
-# Создать все таблицы (в продакшене используйте Alembic)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Запуск Telegram-бота в фоне
+    if settings.TELEGRAM_TOKEN:
+        from app import bot
+        task = asyncio.create_task(bot.poll_loop())
+    else:
+        task = None
+    yield
+    # Остановка бота
+    if task:
+        from app import bot
+        bot.stop()
+        task.cancel()
+
+
+# Создать все таблицы
 Base.metadata.create_all(bind=engine)
-
-# Создать папку для файлов
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI(
     title="БЦ «Золотой» — API системы аренды",
-    description="Управление помещениями, договорами, платежами и коммунальными услугами",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
-# CORS — разрешить запросы от фронтенда
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "*"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Статика для загруженных файлов
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-# Роутеры
 app.include_router(dashboard.router)
 app.include_router(rooms.router)
 app.include_router(tenants.router)
 app.include_router(contracts.router)
 app.include_router(payments.router)
 app.include_router(utilities.router)
+app.include_router(notifications.router)
 
 
 @app.get("/", tags=["Health"])

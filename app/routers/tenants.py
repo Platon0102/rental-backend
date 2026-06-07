@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from app.database import get_db
 from app.models.tenant import Tenant
@@ -28,9 +29,13 @@ def get_tenant(tenant_id: int, db: Session = Depends(get_db)):
 def create_tenant(data: TenantCreate, db: Session = Depends(get_db)):
     tenant = Tenant(**data.model_dump())
     db.add(tenant)
-    db.commit()
-    db.refresh(tenant)
-    return tenant
+    try:
+        db.commit()
+        db.refresh(tenant)
+        return tenant
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Арендатор с таким ИНН уже существует")
 
 
 @router.patch("/{tenant_id}", response_model=TenantOut)
@@ -40,9 +45,13 @@ def update_tenant(tenant_id: int, data: TenantUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Арендатор не найден")
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(tenant, field, value)
-    db.commit()
-    db.refresh(tenant)
-    return tenant
+    try:
+        db.commit()
+        db.refresh(tenant)
+        return tenant
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Арендатор с таким ИНН уже существует")
 
 
 @router.delete("/{tenant_id}", status_code=status.HTTP_204_NO_CONTENT)

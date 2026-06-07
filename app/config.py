@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
 
+    TELEGRAM_TOKEN: str = "8477878496:AAHgLi-6FmbVjy0xHmD-iY4PzlUgg5uhnSk"
+    TELEGRAM_CHAT_ID: str = ""  # заполняется через настройки
+
     class Config:
         env_file = ".env"
 

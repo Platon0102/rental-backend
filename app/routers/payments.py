@@ -27,7 +27,28 @@ def list_payments(
 
 @router.get("/schedule/{contract_id}", response_model=List[PaymentOut])
 def get_schedule(contract_id: int, db: Session = Depends(get_db)):
-    """План платежей по договору (все месяцы, упорядочены хронологически)."""
+    """План платежей по договору. Автоматически помечает просроченные как долг."""
+    from datetime import datetime
+    now = datetime.utcnow()
+
+    # Обновляем просроченные pending → debt
+    overdue = db.query(Payment).filter(
+        Payment.contract_id == contract_id,
+        Payment.status == PaymentStatus.pending,
+        Payment.payment_type == "rent",
+    ).all()
+
+    changed = False
+    for p in overdue:
+        if p.period_year is None or p.period_month is None:
+            continue
+        if p.period_year < now.year or (p.period_year == now.year and p.period_month < now.month):
+            p.status = PaymentStatus.debt
+            changed = True
+
+    if changed:
+        db.commit()
+
     return db.query(Payment).filter(
         Payment.contract_id == contract_id
     ).order_by(Payment.period_year, Payment.period_month).all()

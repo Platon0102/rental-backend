@@ -34,6 +34,9 @@ def get_room(room_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=RoomOut, status_code=status.HTTP_201_CREATED)
 def create_room(data: RoomCreate, db: Session = Depends(get_db)):
     """Создать новое помещение"""
+    exists = db.query(Room).filter(Room.name == data.name).first()
+    if exists:
+        raise HTTPException(status_code=400, detail=f"Помещение с названием «{data.name}» уже существует")
     room = Room(**data.model_dump())
     db.add(room)
     db.commit()
@@ -47,6 +50,10 @@ def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db)):
     room = db.query(Room).filter(Room.id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="Помещение не найдено")
+    if data.name and data.name != room.name:
+        exists = db.query(Room).filter(Room.name == data.name, Room.id != room_id).first()
+        if exists:
+            raise HTTPException(status_code=400, detail=f"Помещение с названием «{data.name}» уже существует")
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(room, field, value)
     db.commit()
@@ -158,11 +165,11 @@ def room_full_history(room_id: int, db: Session = Depends(get_db)):
             "deposit":      c.deposit,
             "termination_reason": c.termination_reason,
             "tenant": {
-                "id":             tenant.id if tenant else None,
-                "name":           tenant.name if tenant else "—",
-                "inn":            tenant.inn if tenant else None,
-                "phone":          tenant.phone if tenant else None,
-                "contact_person": tenant.contact_person if tenant else None,
+                "id":           tenant.id if tenant else None,
+                "name":         tenant.name if tenant else "—",
+                "inn":          tenant.inn if tenant else None,
+                "phone":        tenant.phone if tenant else None,
+                "contact_name": tenant.contact_name if tenant else None,
             },
             "payments_summary": {
                 "total_months": len(payments),
@@ -174,6 +181,7 @@ def room_full_history(room_id: int, db: Session = Depends(get_db)):
             "payments": [
                 {
                     "id":           p.id,
+                    "payment_type": p.payment_type,
                     "period_month": p.period_month,
                     "period_year":  p.period_year,
                     "amount_due":   p.amount_due,
