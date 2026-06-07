@@ -117,6 +117,101 @@ def room_status_history(room_id: int, db: Session = Depends(get_db)):
     return history
 
 
+@router.get("/{room_id}/full-history")
+def room_full_history(room_id: int, db: Session = Depends(get_db)):
+    """
+    Полная история помещения:
+    - все договоры (с арендатором и платежами)
+    - история смен статуса
+    """
+    from app.models.contract import Contract
+    from app.models.payment import Payment
+    from app.models.tenant import Tenant
+
+    room = db.query(Room).filter(Room.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Помещение не найдено")
+
+    # Все договоры по помещению
+    contracts = db.query(Contract).filter(
+        Contract.room_id == room_id
+    ).order_by(Contract.start_date.desc()).all()
+
+    contracts_data = []
+    for c in contracts:
+        tenant = db.query(Tenant).filter(Tenant.id == c.tenant_id).first()
+        payments = db.query(Payment).filter(
+            Payment.contract_id == c.id
+        ).order_by(Payment.period_year, Payment.period_month).all()
+
+        total_due  = sum(p.amount_due for p in payments)
+        total_paid = sum(p.amount_paid for p in payments)
+
+        contracts_data.append({
+            "id":           c.id,
+            "number":       c.number,
+            "status":       c.status,
+            "start_date":   c.start_date.isoformat() if c.start_date else None,
+            "end_date":     c.end_date.isoformat() if c.end_date else None,
+            "terminated_at": c.terminated_at.isoformat() if c.terminated_at else None,
+            "monthly_rent": c.monthly_rent,
+            "deposit":      c.deposit,
+            "termination_reason": c.termination_reason,
+            "tenant": {
+                "id":             tenant.id if tenant else None,
+                "name":           tenant.name if tenant else "—",
+                "inn":            tenant.inn if tenant else None,
+                "phone":          tenant.phone if tenant else None,
+                "contact_person": tenant.contact_person if tenant else None,
+            },
+            "payments_summary": {
+                "total_months": len(payments),
+                "paid_months":  sum(1 for p in payments if p.status == "paid"),
+                "total_due":    total_due,
+                "total_paid":   total_paid,
+                "debt":         max(0, total_due - total_paid),
+            },
+            "payments": [
+                {
+                    "id":           p.id,
+                    "period_month": p.period_month,
+                    "period_year":  p.period_year,
+                    "amount_due":   p.amount_due,
+                    "amount_paid":  p.amount_paid,
+                    "status":       p.status,
+                    "payment_date": p.payment_date.isoformat() if p.payment_date else None,
+                }
+                for p in payments
+            ],
+        })
+
+    # История смен статуса
+    status_history = db.query(RoomStatusHistory).filter(
+        RoomStatusHistory.room_id == room_id
+    ).order_by(RoomStatusHistory.changed_at.desc()).all()
+
+    return {
+        "room": {
+            "id":        room.id,
+            "name":      room.name,
+            "floor":     room.floor,
+            "area":      room.area,
+            "base_rate": room.base_rate,
+            "status":    room.status,
+        },
+        "contracts": contracts_data,
+        "status_history": [
+            {
+                "old_status": h.old_status,
+                "new_status": h.new_status,
+                "reason":     h.reason,
+                "changed_at": h.changed_at.isoformat() if h.changed_at else None,
+            }
+            for h in status_history
+        ],
+    }
+
+
 @router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room(room_id: int, db: Session = Depends(get_db)):
     room = db.query(Room).filter(Room.id == room_id).first()
