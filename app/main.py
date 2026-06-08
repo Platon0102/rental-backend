@@ -7,7 +7,7 @@ import os
 
 from app.database import engine, Base
 from app.config import settings
-from app.routers import rooms, tenants, contracts, payments, utilities, dashboard, notifications
+from app.routers import rooms, tenants, contracts, payments, utilities, dashboard, notifications, auth, business_centers
 
 
 @asynccontextmanager
@@ -48,6 +48,8 @@ app.add_middleware(
 
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
+app.include_router(auth.router)
+app.include_router(business_centers.router)
 app.include_router(dashboard.router)
 app.include_router(rooms.router)
 app.include_router(tenants.router)

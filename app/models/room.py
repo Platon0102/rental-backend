@@ -5,6 +5,7 @@ import enum
 from app.database import Base
 
 
+
 class RoomStatus(str, enum.Enum):
     free     = "free"
     occupied = "occupied"
@@ -23,8 +24,9 @@ class RoomType(str, enum.Enum):
 class Room(Base):
     __tablename__ = "rooms"
 
-    id          = Column(Integer, primary_key=True, index=True)
-    floor       = Column(Integer, nullable=False)
+    id                  = Column(Integer, primary_key=True, index=True)
+    business_center_id  = Column(Integer, ForeignKey("business_centers.id"), nullable=False)
+    floor               = Column(Integer, nullable=False)
     name        = Column(String(100), nullable=False)
     area        = Column(Float, nullable=False)
     room_type   = Column(Enum(RoomType), default=RoomType.office)
@@ -36,6 +38,7 @@ class Room(Base):
     created_at  = Column(DateTime, server_default=func.now())
     updated_at  = Column(DateTime, onupdate=func.now())
 
+    business_center = relationship("BusinessCenter", back_populates="rooms")
     contracts       = relationship("Contract", back_populates="room")
     status_history  = relationship("RoomStatusHistory", back_populates="room",
                                    order_by="RoomStatusHistory.changed_at.desc()")

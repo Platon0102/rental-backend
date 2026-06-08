@@ -12,6 +12,12 @@ config = context.config
 if config.config_file_name:
     fileConfig(config.config_file_name)
 
+# Allow overriding DB URL via environment variable (useful in Docker)
+import os
+db_url = os.getenv("DATABASE_URL")
+if db_url:
+    config.set_main_option("sqlalchemy.url", db_url)
+
 target_metadata = Base.metadata
 
 

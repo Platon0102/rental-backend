@@ -53,7 +53,16 @@
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('OK' if d['ok'] else d['description']\\)\")",
       "Read(//Users/nursultanabdyrazakov/Documents/**)",
       "Bash(python3 fetch_bc.py)",
-      "Bash(python scrape_emails.py)"
+      "Bash(python scrape_emails.py)",
+      "Bash(grep -v \"^$\")",
+      "Bash(railway status *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://rental-backend-production-9c36.up.railway.app/)",
+      "Bash(curl -s https://rental-backend-production-9c36.up.railway.app/)",
+      "Bash(vercel --version)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://rental-frontend-9z4b4zs8u-nursultan-s-projects44.vercel.app/)",
+      "Bash(grep -E \"\\\\.\\(py|js|json\\)$\")",
+      "Bash(find /Users/nursultanabdyrazakov -name \"python*\" -type f 2>/dev/null | grep -v __pycache__ | head -5 && find /Users/nursultanabdyrazakov/Documents/backend -name \"*.venv\" -o -name \"venv\" -o -name \".venv\" 2>/dev/null | head -5)",
+      "Bash(curl -s -X POST http://localhost:8000/auth/login -d \"username=admin@rental.kg&password=changeme123\")"
     ]
   }
 }
