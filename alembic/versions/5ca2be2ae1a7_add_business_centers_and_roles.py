@@ -49,6 +49,8 @@ def upgrade() -> None:
     op.create_foreign_key(None, 'tenants', 'business_centers', ['business_center_id'], ['id'])
 
     # 7. Обновляем users: добавляем role и business_center_id
+    userrole = sa.Enum('superadmin', 'bc_admin', 'manager', 'accountant', name='userrole')
+    userrole.create(op.get_bind(), checkfirst=True)
     op.add_column('users', sa.Column('role', sa.Enum('superadmin', 'bc_admin', 'manager', 'accountant', name='userrole'), nullable=True))
     op.add_column('users', sa.Column('business_center_id', sa.Integer(), nullable=True))
     op.execute("UPDATE users SET role = 'bc_admin' WHERE is_admin = true")
